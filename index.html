@@ -138,18 +138,24 @@
 
   /* ---------- Player ---------- */
   #player{
-    position:fixed; inset:0; background:#000; z-index:30; display:none; flex-direction:column;
+    position:fixed; inset:0; background:#000; z-index:30; display:none;
   }
-  #player.show{ display:flex; }
+  #player.show{ display:block; }
   #playerBar{
+    position:absolute; top:0; left:0; right:0; z-index:6;
     display:flex; align-items:center; justify-content:space-between;
     padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
     background:rgba(20,20,22,0.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
     border-bottom:1px solid var(--hairline);
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  #playerBar.hidden{ opacity:0; transform:translateY(-100%); pointer-events:none; }
+  #revealZone{
+    position:absolute; top:0; left:0; right:0; height:34px; z-index:5;
   }
   #exitBtn{ background:none; border:none; color:var(--accent); font-size:16px; font-weight:600; padding:4px; }
   #playerTitle{ font-size:13px; color:var(--text-dim); font-weight:600; }
-  #playerFrame{ flex:1; border:none; width:100%; background:#fff; }
+  #playerFrame{ position:absolute; inset:0; border:none; width:100%; height:100%; background:#fff; }
 
   #toast{
     position:fixed; left:50%; bottom:calc(30px + env(safe-area-inset-bottom));
@@ -193,12 +199,13 @@
 <div id="loading"><div class="spinner"></div><div>Loading…</div></div>
 
 <div id="player">
+  <iframe id="playerFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-pointer-lock allow-popups"></iframe>
+  <div id="revealZone"></div>
   <div id="playerBar">
     <button id="exitBtn">Done</button>
     <div id="playerTitle"></div>
     <div style="width:40px"></div>
   </div>
-  <iframe id="playerFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-pointer-lock allow-popups"></iframe>
 </div>
 
 <div id="toast"></div>
@@ -211,6 +218,8 @@ const playBtn = document.getElementById('playBtn');
 const loading = document.getElementById('loading');
 const player = document.getElementById('player');
 const playerFrame = document.getElementById('playerFrame');
+const playerBar = document.getElementById('playerBar');
+const revealZone = document.getElementById('revealZone');
 const playerTitle = document.getElementById('playerTitle');
 const lastPlayed = document.getElementById('lastPlayed');
 const status = document.getElementById('status');
@@ -287,6 +296,7 @@ fileInput.addEventListener('change', (e)=>{
     loading.classList.remove('show');
     player.classList.add('show');
     setStatus('Ready');
+    showPlayerBar();
 
     playerFrame.onload = () => {
       try { playerFrame.contentWindow.dispatchEvent(new Event('resize')); } catch (err) {}
@@ -306,7 +316,17 @@ fileInput.addEventListener('change', (e)=>{
   fileInput.value = '';
 });
 
+let barHideTimer = null;
+function showPlayerBar(){
+  playerBar.classList.remove('hidden');
+  clearTimeout(barHideTimer);
+  barHideTimer = setTimeout(()=> playerBar.classList.add('hidden'), 2500);
+}
+revealZone.addEventListener('click', showPlayerBar);
+revealZone.addEventListener('touchstart', showPlayerBar, {passive:true});
+
 document.getElementById('exitBtn').addEventListener('click', ()=>{
+  clearTimeout(barHideTimer);
   player.classList.remove('show');
   playerFrame.removeAttribute('srcdoc');
   playerFrame.src = 'about:blank';
