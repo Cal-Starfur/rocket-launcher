@@ -68,22 +68,36 @@
     50%{ transform:scale(1.22); opacity:1; }
   }
 
+  /* The actual glass material — real backdrop blur, lives on its own empty
+     layer so it never shares an element with something that has its own
+     `filter` (that combination corrupts rendering on iOS Safari). */
+  #glassSurface{
+    position:absolute; z-index:1; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:124px; height:124px; border-radius:36px;
+    background:rgba(232,163,61,0.34);
+    backdrop-filter:blur(22px) saturate(190%);
+    -webkit-backdrop-filter:blur(22px) saturate(190%);
+    box-shadow:0 10px 24px rgba(0,0,0,0.45);
+  }
+
   #playBtn{
     position:relative; z-index:2;
     width:124px; height:124px; border-radius:36px;
-    border:1px solid rgba(255,255,255,0.28);
-    background:rgba(232,163,61,0.62);
+    border:1px solid rgba(255,255,255,0.32);
+    background:transparent;
     display:flex; align-items:center; justify-content:center;
     font-size:40px; color:rgba(20,12,0,0.7);
-    box-shadow:0 10px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15);
-    transition:transform .15s cubic-bezier(.34,1.4,.6,1), box-shadow .15s ease;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.18);
+    transition:transform .15s cubic-bezier(.34,1.4,.6,1);
   }
   #playBtn::after{
     content:''; position:absolute; inset:0; border-radius:35px;
-    background:linear-gradient(180deg, rgba(255,255,255,0.30), transparent 60%);
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 28%),
+      linear-gradient(180deg, rgba(255,255,255,0.22), transparent 55%);
     pointer-events:none;
   }
-  #playBtn:active{ transform:scale(0.94); box-shadow:0 6px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3); }
+  #playBtn:active{ transform:scale(0.94); }
   #rocketGlyph{ display:inline-block; filter:brightness(0); }
 
   #status{
@@ -100,6 +114,24 @@
   }
 
   #hint{ display:none; font-size:13px; color:var(--text-dim); margin-top:6px; }
+
+  #featured{ margin-top:34px; width:100%; max-width:420px; }
+  #featuredLabel{
+    font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--text-dimmer); margin-bottom:12px; text-align:left; padding-left:4px;
+  }
+  #featuredRow{ display:flex; gap:14px; overflow-x:auto; padding:2px 4px 8px; }
+  .featTile{ display:flex; flex-direction:column; align-items:center; gap:8px; flex:0 0 auto; width:84px; }
+  .featIcon{
+    width:64px; height:64px; border-radius:20px;
+    background:linear-gradient(135deg, var(--accent), #c9781f);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:800; color:rgba(20,12,0,0.65);
+    box-shadow:0 6px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .featTile:active .featIcon{ transform:scale(0.92); }
+  .featLabel{ font-size:11.5px; color:var(--text-dim); text-align:center; max-width:80px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
   #fileInput{ display:none; }
 
@@ -142,19 +174,35 @@
   }
   #player.show{ display:block; }
   #playerBar{
-    position:absolute; top:0; left:0; right:0; z-index:6;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
-    background:rgba(20,20,22,0.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-    border-bottom:1px solid var(--hairline);
-    transition:opacity .3s ease, transform .3s ease;
+    position:absolute; z-index:6;
+    top:calc(10px + env(safe-area-inset-top)); left:50%;
+    transform:translateX(-50%) scale(1); transform-origin:top center;
+    display:flex; align-items:center; gap:14px;
+    padding:9px 10px 9px 18px; border-radius:999px;
+    background:rgba(28,28,30,0.55);
+    backdrop-filter:blur(26px) saturate(200%);
+    -webkit-backdrop-filter:blur(26px) saturate(200%);
+    border:1px solid rgba(255,255,255,0.22);
+    box-shadow:0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition:opacity .28s cubic-bezier(.3,.8,.4,1), transform .28s cubic-bezier(.3,.8,.4,1);
+    max-width:calc(100vw - 32px);
   }
-  #playerBar.hidden{ opacity:0; transform:translateY(-100%); pointer-events:none; }
+  #playerBar::after{
+    content:''; position:absolute; inset:0; border-radius:999px; pointer-events:none;
+    background:linear-gradient(120deg, rgba(255,255,255,0.28) 0%, transparent 35%);
+  }
+  #playerBar.hidden{ opacity:0; transform:translateX(-50%) scale(0.85); pointer-events:none; }
   #revealZone{
-    position:absolute; top:0; left:0; right:0; height:34px; z-index:5;
+    position:absolute; top:0; left:0; right:0; height:44px; z-index:5;
   }
-  #exitBtn{ background:none; border:none; color:var(--accent); font-size:16px; font-weight:600; padding:4px; }
-  #playerTitle{ font-size:13px; color:var(--text-dim); font-weight:600; }
+  #exitBtn{
+    position:relative; background:rgba(255,255,255,0.12); border:none; color:var(--accent);
+    font-size:14.5px; font-weight:600; padding:7px 14px; border-radius:999px;
+  }
+  #playerTitle{
+    position:relative; font-size:13px; color:var(--text-dim); font-weight:600;
+    max-width:46vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:4px;
+  }
   #playerFrame{ position:absolute; inset:0; border:none; width:100%; height:100%; background:#fff; }
 
   #toast{
@@ -176,12 +224,18 @@
 <div id="home">
   <div id="pad">
     <div id="glow"></div>
+    <div id="glassSurface"></div>
     <button id="playBtn"><span id="rocketGlyph">🚀</span></button>
   </div>
   <div id="status">Ready</div>
   <div id="lastPlayed"></div>
   <div id="hint">Tap to launch a game</div>
   <input type="file" id="fileInput" multiple accept=".html,.htm,.js,.mjs,.css,.json,.txt,.xml,.png,.jpg,.jpeg,.gif,.webp,.svg,.bmp,.ico,.mp3,.wav,.ogg,.m4a,.mp4,.webm,.woff,.woff2,.ttf,.otf,.data,.wasm">
+
+  <div id="featured">
+    <div id="featuredLabel">Featured</div>
+    <div id="featuredRow"></div>
+  </div>
 </div>
 
 <div id="sheetOverlay">
@@ -204,7 +258,6 @@
   <div id="playerBar">
     <button id="exitBtn">Done</button>
     <div id="playerTitle"></div>
-    <div style="width:40px"></div>
   </div>
 </div>
 
@@ -226,6 +279,42 @@ const status = document.getElementById('status');
 const infoBtn = document.getElementById('infoBtn');
 const sheetOverlay = document.getElementById('sheetOverlay');
 const closeSheetBtn = document.getElementById('closeSheetBtn');
+const featuredRow = document.getElementById('featuredRow');
+
+const FEATURED_GAMES = [
+  { name: 'Wigglers Room', path: 'games/wigglers-demo.html', initials: 'WR' }
+];
+
+function renderFeatured(){
+  FEATURED_GAMES.forEach(g => {
+    const tile = document.createElement('div');
+    tile.className = 'featTile';
+    tile.innerHTML = `<div class="featIcon">${g.initials}</div><div class="featLabel">${g.name}</div>`;
+    tile.addEventListener('click', () => launchHostedGame(g));
+    featuredRow.appendChild(tile);
+  });
+}
+
+function launchHostedGame(game){
+  loading.classList.add('show');
+  setStatus('Loading', true);
+  playerTitle.textContent = game.name;
+  lastPlayed.textContent = 'Last: ' + game.name;
+
+  loading.classList.remove('show');
+  player.classList.add('show');
+  setStatus('Ready');
+  showPlayerBar();
+
+  playerFrame.onload = () => {
+    try { playerFrame.contentWindow.dispatchEvent(new Event('resize')); } catch (err) {}
+  };
+  // Real hosted same-origin URL — no blob/srcdoc needed, relative asset
+  // paths inside the game resolve naturally against its actual location.
+  playerFrame.src = game.path;
+}
+
+renderFeatured();
 
 function toast(msg){
   const t = document.getElementById('toast');
